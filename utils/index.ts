@@ -11,26 +11,26 @@ export const runtime = "edge";
 const configuration = new Configuration({
   apiKey: Deno.env.get("OPENAI_API_KEY")!,
 });
+const openai = new OpenAIApi(configuration);
 
 Deno.serve(async (req) => {
-  const { query } = await req.json();
+  const { messages } = await req.json();
 
-  const openai = new OpenAIApi(configuration);
 
-  const response = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt: query,
-    max_tokens: 256,
-    temperature: 0,
+  const response = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages,
+    stream: true
   });
-  const stream = OpenAIStream(response);
-  const data = new StreamingTextResponse(stream);
-  console.log(data.body);
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  );
+  const stream = OpenAIStream(response);
+  console.log(stream);
+  return new StreamingTextResponse(stream);
+
+  // return new Response(
+  //   JSON.stringify({ id, text }),
+  //   { headers: { "Content-Type": "application/json" } },
+  // );
 });
 
 /* To invoke locally:
